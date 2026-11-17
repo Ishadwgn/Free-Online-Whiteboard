@@ -1,0 +1,59 @@
+# Free Online Whiteboard
+
+> A fast, zero-friction, 100% free online collaborative whiteboard with instant access, zero sign-up requirements, and real-time multi-user synchronization.
+
+## Overview
+Free Online Whiteboard is an educational and productivity visual workspace designed to remove all onboarding barriers. Users can draw, brainstorm, teach, and solve math problems within 200ms of loading the website without providing an email, password, or credit card.
+
+- **Website**: https://freeonlinewhiteboard.com
+- **License**: 100% Free Forever (No freemium limits, no board caps)
+- **Authentication**: Zero sign-up / No login required
+- **Privacy**: Local-first storage (IndexedDB/LocalStorage); ephemeral collaborative rooms with zero database storage of canvas strokes.
+
+## Core Capabilities
+- **High-Precision Drawing Engine**: Native HTML5 Canvas 2D with quadratic Bézier smoothing and High-DPI (Retina/4K) devicePixelRatio scaling.
+- **Realistic Cursors**: Contextual SVG cursors mimicking a real sharp pencil when drawing, marker when highlighting, and rubber eraser when erasing.
+- **12+ Geometric & Diagram Shapes**: Rectangle, Rounded Rectangle, Circle/Ellipse, Triangle, Diamond (Flowchart Decision), 5-Point Star, Hexagon, Straight Line, Directional Arrow, Bidirectional Arrow, Speech Callout Bubble, and Database Cylinder.
+- **Stepped Stroke Thickness**: Dynamic `-` and `+` thickness stepper ranging from ultra-fine 1px lines to thick 40px markers.
+- **Deletable & Colorable Sticky Notes**: Virtual draggable cards with 4 pastel color toggles (Yellow, Pink, Blue, Green) and 1-click delete buttons.
+- **Canvas Backgrounds**: 1-click toggling between Blank White, Dot Grid (bullet journaling), Cartesian Math Graph Paper, and OLED Dark Mode.
+- **Real-Time Collaboration**: Peer-to-peer WebSockets room links (`?room=XYZ`) with live cursor tags and synchronized multi-user ink strokes.
+- **Instant High-Res Export**: 2X High-DPI PNG export with automatic clean white background, vector SVG export, and JSON project backup.
+
+## Key Sections & Directory Structure
+
+### Specialized Tools
+- `/tools/collaborative-whiteboard`: Multi-user whiteboard with live cursor presence and WebSockets sync.
+- `/tools/math-whiteboard`: STEM tutoring whiteboard equipped with Cartesian 4-quadrant coordinate planes and formula tools.
+- `/tools/teaching-whiteboard`: Virtual classroom canvas with student focus controls, laser pointer, and background worksheet locking.
+- `/tools/system-design-whiteboard`: Software architecture sketching with orthogonal connectors, server nodes, and dark mode.
+- `/tools/sticky-notes-board`: Digital Kanban board with movable cards, voting dots, and retrospective containers.
+- `/tools/screen-recording-whiteboard`: In-browser screen recorder converting whiteboard drawings and voiceover into watermark-free WebM/MP4 videos.
+- `/tools/quick-sketch`: Sub-5ms input latency scratchpad with 1-click clipboard image copying.
+- `/tools/graph-grid-generator`: Custom spacing graph paper maker for math homework and isometric 3D sketching.
+
+### Pre-Built Interactive Templates
+- `/templates/blank`: Pristine white canvas for unstructured thought.
+- `/templates/math-coordinate-plane`: Pre-calibrated Cartesian X/Y graph with 4 quadrants.
+- `/templates/sprint-retrospective`: Mad/Sad/Glad agile retrospective with categorized sticky columns.
+- `/templates/kanban-board`: To-Do, In Progress, and Completed workflow columns.
+- `/templates/mind-map`: Radial brainstorming tree connecting sub-topics to a core thesis.
+- `/templates/cornell-notes`: Structured student note-taking canvas with cues, lecture notes, and summary container.
+
+### Persona Use-Cases
+- `/use-cases/teachers-educators`: Classroom teaching on Chromebooks with FERPA/COPPA student privacy compliance.
+- `/use-cases/math-science-tutors`: Remote STEM instruction, solving quadratics, geometry derivations, and calculus graphing.
+- `/use-cases/remote-teams`: Brainstorming and sprint reviews without corporate Miro seat licenses.
+- `/use-cases/software-engineers`: Distributed systems architecture diagrams and technical interview practice.
+- `/use-cases/coaches-sports`: Basketball, soccer, and football tactical playbooks with court overlays.
+
+### Head-to-Head Comparisons
+- `/compare/jamboard-alternatives`: Why Free Online Whiteboard is the cleanest replacement for discontinued Google Jamboard.
+- `/compare/miro-alternative-free`: Overcoming Miro's 3-board restriction with unlimited free boards.
+- `/compare/microsoft-whiteboard-alternative`: Platform-agnostic browser whiteboard requiring no Microsoft 365 or Entra ID accounts.
+- `/compare/canva-whiteboard-vs-free`: Fast vector sketching without commercial upsells or template paywalls.
+
+## Technical Stack
+- **Frontend**: Vanilla ES6 JavaScript, HTML5 Canvas 2D, WebSockets API, MediaRecorder API.
+- **Backend Relay**: Lightweight Node.js + `ws` WebSockets server with in-memory transient room event broadcasting.
+- **Crawlability**: 100% reachable within 3 clicks from homepage `/`. Full XML sitemap and JSON-LD schema provided.

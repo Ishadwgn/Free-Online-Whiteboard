@@ -2,9 +2,11 @@
 
 > A fast, zero-friction, 100% free online collaborative whiteboard with instant access, zero sign-up requirements, and real-time multi-user synchronization.
 
+🌐 **Live Website:** [https://free-online-whiteboard.netlify.app/](https://free-online-whiteboard.netlify.app/)
+
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-green.svg)
-![Live](https://img.shields.io/badge/status-live-brightgreen.svg)
+![Netlify](https://img.shields.io/badge/hosted%20on-Netlify-00C7B7.svg)
+![Status](https://img.shields.io/badge/status-live-brightgreen.svg)
 
 ---
 

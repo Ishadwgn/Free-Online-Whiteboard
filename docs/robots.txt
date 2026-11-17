@@ -1,5 +1,5 @@
 # Production Robots.txt for Free Online Whiteboard
-# https://freeonlinewhiteboard.com
+# https://free-online-whiteboard.netlify.app
 
 User-agent: *
 Allow: /
@@ -32,7 +32,7 @@ User-agent: Amazonbot
 Allow: /
 
 # LLM Context Document
-# https://freeonlinewhiteboard.com/llms.txt
+# https://free-online-whiteboard.netlify.app/llms.txt
 
 # XML Sitemap Location
-Sitemap: https://freeonlinewhiteboard.com/sitemap.xml
+Sitemap: https://free-online-whiteboard.netlify.app/sitemap.xml

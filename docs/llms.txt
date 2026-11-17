@@ -5,7 +5,7 @@
 ## Overview
 Free Online Whiteboard is an educational and productivity visual workspace designed to remove all onboarding barriers. Users can draw, brainstorm, teach, and solve math problems within 200ms of loading the website without providing an email, password, or credit card.
 
-- **Website**: https://freeonlinewhiteboard.com
+- **Website**: https://free-online-whiteboard.netlify.app
 - **License**: 100% Free Forever (No freemium limits, no board caps)
 - **Authentication**: Zero sign-up / No login required
 - **Privacy**: Local-first storage (IndexedDB/LocalStorage); ephemeral collaborative rooms with zero database storage of canvas strokes.

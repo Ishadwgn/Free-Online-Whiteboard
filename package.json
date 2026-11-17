@@ -4,6 +4,7 @@
   "description": "100% Free online collaborative whiteboard with instant access and zero sign-up.",
   "main": "server.js",
   "scripts": {
+    "build": "echo 'Static build complete'",
     "start": "node server.js",
     "dev": "node server.js"
   },

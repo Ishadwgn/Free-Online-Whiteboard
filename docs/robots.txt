@@ -1,0 +1,38 @@
+# Production Robots.txt for Free Online Whiteboard
+# https://freeonlinewhiteboard.com
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /*?*room=*
+
+# Allow AI Search & LLM Crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Amazonbot
+Allow: /
+
+# LLM Context Document
+# https://freeonlinewhiteboard.com/llms.txt
+
+# XML Sitemap Location
+Sitemap: https://freeonlinewhiteboard.com/sitemap.xml

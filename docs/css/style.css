@@ -1,0 +1,662 @@
+/* Minimalist, Premium Design System for Free Online Whiteboard */
+:root {
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --bg-app: #fafafa;
+  --bg-card: rgba(255, 255, 255, 0.94);
+  --border-light: rgba(0, 0, 0, 0.08);
+  --border-focus: #3b82f6;
+  --text-main: #18181b;
+  --text-muted: #71717a;
+  --shadow-dock: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --shadow-dropdown: 0 12px 28px 0 rgba(0, 0, 0, 0.12), 0 2px 4px 0 rgba(0, 0, 0, 0.04);
+  --radius-dock: 14px;
+  --radius-sm: 8px;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--text-main);
+  background: var(--bg-app);
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Minimal Top Bar */
+.top-bar {
+  height: 52px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-light);
+  z-index: 50;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-main);
+}
+
+.brand-logo {
+  width: 28px;
+  height: 28px;
+  background: #18181b;
+  color: white;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.brand-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 1px 6px;
+  border-radius: 99px;
+  text-transform: uppercase;
+}
+
+.top-bar-center {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.top-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.top-btn:hover {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-main);
+}
+
+.top-btn.active {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text-main);
+}
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-pill {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-pill-default {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  color: #27272a;
+}
+
+.btn-pill-default:hover {
+  background: #f4f4f5;
+}
+
+.btn-pill-primary {
+  background: #18181b;
+  border: 1px solid #18181b;
+  color: #ffffff;
+}
+
+.btn-pill-primary:hover {
+  background: #27272a;
+}
+
+.btn-pill-accent {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+}
+
+.btn-pill-accent:hover {
+  background: #dbeafe;
+}
+
+/* Canvas Viewport */
+.canvas-wrapper {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+#mainCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Floating Bottom Dock (Toolbar) */
+.dock-toolbar {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-dock);
+  box-shadow: var(--shadow-dock);
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  z-index: 40;
+}
+
+.dock-item-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.dock-btn {
+  height: 38px;
+  min-width: 38px;
+  padding: 0 8px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: #52525b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.dock-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-main);
+}
+
+.dock-btn.active {
+  background: #18181b;
+  color: #ffffff;
+}
+
+.dock-divider {
+  width: 1px;
+  height: 22px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 0 4px;
+}
+
+/* Shapes Popover Menu */
+.shapes-popover {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: var(--shadow-dropdown);
+  padding: 8px;
+  display: none;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  width: 280px;
+  z-index: 60;
+}
+
+.shapes-popover.open {
+  display: grid;
+  animation: popUp 0.15s ease-out;
+}
+
+@keyframes popUp {
+  from { opacity: 0; transform: translate(-50%, 6px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.shape-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #3f3f46;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  gap: 4px;
+}
+
+.shape-opt:hover {
+  background: #f4f4f5;
+  color: #18181b;
+}
+
+.shape-opt.active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
+}
+
+.shape-opt span {
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* Floating Properties (Colors) */
+.dock-properties {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+}
+
+.color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.1s ease;
+}
+
+.color-dot:hover {
+  transform: scale(1.18);
+}
+
+.color-dot.active {
+  border-color: #18181b;
+  transform: scale(1.12);
+}
+
+/* Stroke Thickness Stepper (Kam / Jayda) */
+.dock-stepper {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  padding: 2px 4px;
+  gap: 2px;
+}
+
+.stepper-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #3f3f46;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.stepper-btn:hover {
+  background: #ffffff;
+  color: #18181b;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stepper-btn:active {
+  transform: scale(0.92);
+}
+
+.stepper-val {
+  font-size: 12px;
+  font-weight: 600;
+  color: #27272a;
+  min-width: 34px;
+  text-align: center;
+  user-select: none;
+}
+
+/* Floating Zoom Indicator */
+.zoom-controls {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  padding: 4px 6px;
+  gap: 4px;
+  z-index: 30;
+}
+
+.zoom-btn {
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #52525b;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoom-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-main);
+}
+
+.zoom-val {
+  font-size: 12px;
+  font-weight: 600;
+  color: #3f3f46;
+  min-width: 42px;
+  text-align: center;
+}
+
+/* Enhanced Sticky Notes with Header, Colors & Delete Button */
+.note-card {
+  position: absolute;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: grab;
+  z-index: 25;
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+  pointer-events: auto;
+}
+
+.note-card:active {
+  cursor: grabbing;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
+}
+
+.note-header {
+  height: 26px;
+  padding: 3px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  cursor: grab;
+}
+
+.note-color-dots {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.note-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  transition: transform 0.1s ease;
+}
+
+.note-dot:hover {
+  transform: scale(1.3);
+}
+
+.note-delete-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.45);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.note-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.18);
+  color: #ef4444;
+}
+
+.note-body {
+  flex: 1;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #18181b;
+  outline: none;
+  cursor: text;
+  word-break: break-word;
+  white-space: pre-wrap;
+  min-height: 75px;
+}
+
+.note-card-yellow { background: #fef08a; border: 1px solid #fde047; }
+.note-card-pink { background: #fbcfe8; border: 1px solid #f9a8d4; }
+.note-card-blue { background: #bae6fd; border: 1px solid #7dd3fc; }
+.note-card-green { background: #bbf7d0; border: 1px solid #86efac; }
+
+/* Remote Peer Cursors */
+.peer-cursor {
+  position: absolute;
+  pointer-events: none;
+  z-index: 35;
+  transition: transform 0.04s linear;
+}
+
+.peer-tag {
+  font-size: 11px;
+  font-weight: 500;
+  color: #ffffff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  margin-left: 10px;
+  margin-top: -6px;
+  display: inline-block;
+}
+
+/* Simple Clean Modal for Templates */
+.clean-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(4px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.clean-modal-overlay.open {
+  display: flex;
+}
+
+.clean-modal {
+  background: #ffffff;
+  width: 90%;
+  max-width: 640px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-dropdown);
+  overflow: hidden;
+  animation: popIn 0.15s ease-out;
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.clean-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f4f4f5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.clean-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #18181b;
+}
+
+.clean-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  color: #71717a;
+  cursor: pointer;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clean-modal-close:hover {
+  background: #f4f4f5;
+  color: #18181b;
+}
+
+.clean-modal-body {
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.template-card {
+  border: 1px solid #e4e4e7;
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.template-card:hover {
+  border-color: #18181b;
+  background: #fafafa;
+  transform: translateY(-1px);
+}
+
+.template-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #18181b;
+}
+
+.template-desc {
+  font-size: 12px;
+  color: #71717a;
+  line-height: 1.4;
+}
+
+/* Toast */
+.toast-box {
+  position: fixed;
+  bottom: 84px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  pointer-events: none;
+}
+
+.toast-msg {
+  background: #18181b;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 99px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  animation: toastUp 0.15s ease-out;
+}
+
+@keyframes toastUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .template-grid { grid-template-columns: 1fr; }
+  .top-btn span { display: none; }
+  .dock-toolbar { width: 94%; overflow-x: auto; justify-content: flex-start; }
+}

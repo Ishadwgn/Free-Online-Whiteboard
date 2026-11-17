@@ -1,0 +1,26 @@
+{
+  "name": "free-online-whiteboard",
+  "version": "1.0.0",
+  "description": "100% Free online collaborative whiteboard with instant access and zero sign-up.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "whiteboard",
+    "online-whiteboard",
+    "drawing",
+    "canvas",
+    "collaboration",
+    "webrtc",
+    "websockets",
+    "jamboard-alternative"
+  ],
+  "author": "Lakhan Dewangan",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.3.0",
+    "ws": "^8.23.0"
+  }
+}

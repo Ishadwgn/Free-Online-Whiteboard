@@ -1,0 +1,48 @@
+{
+  "name": "Free Online Whiteboard - No Login Collaborative Drawing",
+  "short_name": "Whiteboard",
+  "description": "100% Free online collaborative whiteboard with zero sign-up. Draw, solve math, brainstorm, and collaborate in real time.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fafafa",
+  "theme_color": "#18181b",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Blank Canvas",
+      "url": "/",
+      "description": "Open a fresh blank whiteboard"
+    },
+    {
+      "name": "Math Coordinate Grid",
+      "url": "/?template=math",
+      "description": "Open Cartesian coordinate plane"
+    },
+    {
+      "name": "Sprint Retrospective",
+      "url": "/?template=retro",
+      "description": "Open agile retrospective board"
+    }
+  ]
+}

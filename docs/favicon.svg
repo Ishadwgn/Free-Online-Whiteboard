@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#18181b"/>
+      <stop offset="100%" stop-color="#09090b"/>
+    </linearGradient>
+    <linearGradient id="penGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="strokeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+  </defs>
+  <!-- Background Squircle -->
+  <rect width="32" height="32" rx="7" fill="url(#bgGrad)"/>
+  <rect x="0.5" y="0.5" width="31" height="31" rx="6.5" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+  <!-- Canvas Ink Wave -->
+  <path d="M5 25C9 21 13 26 18 23" fill="none" stroke="url(#strokeGrad)" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Modern Pen/Pencil Icon -->
+  <path d="M7 23L10 17L22 5C22.8 4.2 24.2 4.2 25 5C25.8 5.8 25.8 7.2 25 8L13 20L7 23Z" fill="url(#penGrad)"/>
+  <path d="M7 23L10 20L10 17L7 23Z" fill="#ffffff" opacity="0.9"/>
+  <path d="M19 8L22 11" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+</svg>

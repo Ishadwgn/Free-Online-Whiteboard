@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Free Online Whiteboard - Instant No-Login Collaborative Drawing</title>
+  <meta name="description" content="100% Free online whiteboard with zero sign-up. Draw with realistic pencil & eraser, sketch 12+ shapes, solve math on coordinate grids, brainstorm with sticky notes, and collaborate in real time.">
+  <meta name="keywords" content="free online whiteboard, online whiteboard no sign up, collaborative whiteboard, best free online whiteboard for teaching, jamboard alternative free, online math whiteboard">
+  <meta name="author" content="Free Online Whiteboard">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://freeonlinewhiteboard.com/">
+
+  <!-- Favicons & App Icons -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="alternate icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Mobile & PWA Meta -->
+  <meta name="theme-color" content="#18181b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Whiteboard">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://freeonlinewhiteboard.com/">
+  <meta property="og:site_name" content="Free Online Whiteboard">
+  <meta property="og:title" content="Free Online Whiteboard - Instant No-Login Collaborative Drawing">
+  <meta property="og:description" content="100% Free online whiteboard with zero sign-up. Draw with realistic pencil & eraser, sketch 12+ shapes, solve math, brainstorm, and collaborate in real time.">
+  <meta property="og:image" content="https://freeonlinewhiteboard.com/icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Free Online Whiteboard - Instant No-Login Collaborative Drawing">
+  <meta name="twitter:description" content="100% Free online whiteboard with zero sign-up. Draw, sketch 12+ shapes, solve math on coordinate grids, and collaborate in real-time.">
+  <meta name="twitter:image" content="https://freeonlinewhiteboard.com/icon-512.png">
+
+  <!-- Schema.org JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "Free Online Whiteboard",
+        "url": "https://freeonlinewhiteboard.com/",
+        "applicationCategory": "EducationalApplication",
+        "operatingSystem": "All Web Browsers",
+        "browserRequirements": "Requires JavaScript and HTML5 Canvas",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "description": "Zero-friction free online whiteboard with real-time multi-user collaboration, realistic pencil/eraser cursors, 12+ shapes, math coordinate planes, and draggable sticky notes.",
+        "featureList": [
+          "Zero registration or sign-up required",
+          "Realistic pencil, marker, and eraser cursors",
+          "12+ geometric and flowchart shapes",
+          "Draggable sticky notes with color selector and instant delete",
+          "Continuous stroke thickness stepper (kam / jayda)",
+          "Cartesian 4-quadrant math graph paper",
+          "Real-time peer-to-peer WebSockets synchronization",
+          "High-DPI Retina resolution with 2X PNG export"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "name": "Free Online Whiteboard",
+        "url": "https://freeonlinewhiteboard.com/",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://freeonlinewhiteboard.com/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      }
+    ]
+  }
+  </script>
+
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Minimal Top Header -->
+  <header class="top-bar">
+    <div class="brand">
+      <div class="brand-logo">✎</div>
+      <span class="brand-name">Whiteboard</span>
+      <span class="brand-badge">Free</span>
+    </div>
+
+    <!-- Center: Clean Canvas Controls -->
+    <div class="top-bar-center">
+      <button class="top-btn" id="bgToggleBtn" title="Switch Background">
+        <span>Canvas:</span> <strong id="bgLabel">Blank</strong> ▾
+      </button>
+      <button class="top-btn" id="templatesBtn">
+        <span>📋 Templates</span>
+      </button>
+    </div>
+
+    <!-- Right: Actions -->
+    <div class="top-bar-right">
+      <button class="btn-pill btn-pill-default" id="undoBtn" title="Undo (Ctrl+Z)">↩ Undo</button>
+      <button class="btn-pill btn-pill-default" id="redoBtn" title="Redo (Ctrl+Y)">↪ Redo</button>
+      <button class="btn-pill btn-pill-accent" id="shareRoomBtn" title="Invite & Collaborate">
+        <span class="live-dot" style="width:7px; height:7px; border-radius:50%; background:#2563eb; display:inline-block;"></span>
+        <span>Share</span>
+      </button>
+      <button class="btn-pill btn-pill-primary" id="exportBtn" title="Download High-Res Image">Export PNG</button>
+    </div>
+  </header>
+
+  <!-- Interactive Canvas Viewport -->
+  <main class="canvas-wrapper" id="canvasWrapper">
+    <canvas id="mainCanvas"></canvas>
+    
+    <!-- Sticky Notes Floating Container -->
+    <div id="noteContainer" style="position:absolute; inset:0; pointer-events:none;"></div>
+
+    <!-- Minimal Floating Bottom Dock (Tools, Shapes, Colors, Size Stepper) -->
+    <nav class="dock-toolbar" id="dockToolbar">
+      <!-- Freehand Tools -->
+      <button class="dock-btn active" data-tool="pen" title="Pencil / Pen (P)">✏️</button>
+      <button class="dock-btn" data-tool="marker" title="Highlighter Marker (H)">🖍️</button>
+      <button class="dock-btn" data-tool="eraser" title="Eraser (E)">🧹</button>
+
+      <div class="dock-divider"></div>
+
+      <!-- Multiple Shapes Dropdown / Popover -->
+      <div class="dock-item-wrapper">
+        <button class="dock-btn" id="shapesMenuBtn" title="Shapes (S)">
+          <span id="activeShapeIcon">⬜</span>
+          <span style="font-size:10px; margin-left:3px; opacity:0.7;">▾</span>
+        </button>
+
+        <div class="shapes-popover" id="shapesPopover">
+          <div class="shape-opt active" data-shape="rect" title="Rectangle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            <span>Rect</span>
+          </div>
+          <div class="shape-opt" data-shape="roundedRect" title="Rounded Rectangle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="6"/></svg>
+            <span>Round</span>
+          </div>
+          <div class="shape-opt" data-shape="circle" title="Circle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+            <span>Circle</span>
+          </div>
+          <div class="shape-opt" data-shape="triangle" title="Triangle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 3 22 21 2 21"/></svg>
+            <span>Triangle</span>
+          </div>
+          <div class="shape-opt" data-shape="diamond" title="Diamond">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 22 12 12 22 2 12"/></svg>
+            <span>Diamond</span>
+          </div>
+          <div class="shape-opt" data-shape="star" title="Star">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span>Star</span>
+          </div>
+          <div class="shape-opt" data-shape="hexagon" title="Hexagon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 21 7 21 17 12 22 3 17 3 7"/></svg>
+            <span>Hexagon</span>
+          </div>
+          <div class="shape-opt" data-shape="line" title="Straight Line">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="20" x2="20" y2="4"/></svg>
+            <span>Line</span>
+          </div>
+          <div class="shape-opt" data-shape="arrow" title="Arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            <span>Arrow</span>
+          </div>
+          <div class="shape-opt" data-shape="doubleArrow" title="Double Arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7 7 2 12 7 17"/><line x1="2" y1="12" x2="22" y2="12"/><polyline points="17 7 22 12 17 17"/></svg>
+            <span>2-Way</span>
+          </div>
+          <div class="shape-opt" data-shape="speechBubble" title="Speech Bubble">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            <span>Bubble</span>
+          </div>
+          <div class="shape-opt" data-shape="cylinder" title="Database Cylinder">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+            <span>Cylinder</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Text & Sticky Note -->
+      <button class="dock-btn" data-tool="text" title="Text Box (T)">🔤</button>
+      <button class="dock-btn" data-tool="note" title="Sticky Note (N)">📝</button>
+
+      <div class="dock-divider"></div>
+
+      <!-- Curated Color Dots -->
+      <div class="dock-properties">
+        <div class="color-dot active" data-color="#18181b" style="background:#18181b" title="Black"></div>
+        <div class="color-dot" data-color="#2563eb" style="background:#2563eb" title="Blue"></div>
+        <div class="color-dot" data-color="#ef4444" style="background:#ef4444" title="Red"></div>
+        <div class="color-dot" data-color="#10b981" style="background:#10b981" title="Green"></div>
+        <div class="color-dot" data-color="#f59e0b" style="background:#f59e0b" title="Yellow"></div>
+        <div class="color-dot" data-color="#8b5cf6" style="background:#8b5cf6" title="Purple"></div>
+      </div>
+
+      <div class="dock-divider"></div>
+
+      <!-- Stroke Thickness Stepper (Kam / Jayda) -->
+      <div class="dock-stepper" title="Thickness (Kam / Jayda)">
+        <button class="stepper-btn" id="sizeDownBtn" title="Kam Karein (Decrease)">−</button>
+        <span class="stepper-val" id="sizeValText">4px</span>
+        <button class="stepper-btn" id="sizeUpBtn" title="Jayda Karein (Increase)">+</button>
+      </div>
+
+      <div class="dock-divider"></div>
+
+      <!-- Clear Canvas -->
+      <button class="dock-btn" id="clearBtn" title="Clear Canvas" style="color:#ef4444;">🗑️</button>
+    </nav>
+
+    <!-- Bottom Left: Simple Zoom Widget -->
+    <div class="zoom-controls">
+      <button class="zoom-btn" id="zoomOut" title="Zoom Out">−</button>
+      <span class="zoom-val" id="zoomText">100%</span>
+      <button class="zoom-btn" id="zoomIn" title="Zoom In">+</button>
+      <button class="zoom-btn" id="zoomReset" title="Reset (100%)">⟲</button>
+    </div>
+  </main>
+
+  <!-- Clean Templates Modal -->
+  <div class="clean-modal-overlay" id="templatesModal">
+    <div class="clean-modal">
+      <div class="clean-modal-header">
+        <h3 class="clean-modal-title">Choose a Template</h3>
+        <button class="clean-modal-close" id="closeTemplatesBtn">&times;</button>
+      </div>
+      <div class="clean-modal-body">
+        <div class="template-grid">
+          <div class="template-card" data-template="blank">
+            <span class="template-title">📄 Blank Canvas</span>
+            <span class="template-desc">Clean white workspace for freehand sketching and notes.</span>
+          </div>
+          <div class="template-card" data-template="math">
+            <span class="template-title">📐 Math Coordinate Grid</span>
+            <span class="template-desc">X-Y axes Cartesian plane for functions, algebra, and geometry.</span>
+          </div>
+          <div class="template-card" data-template="retro">
+            <span class="template-title">🎉 Sprint Retrospective</span>
+            <span class="template-desc">What Went Well, Needs Work, and Action Items columns.</span>
+          </div>
+          <div class="template-card" data-template="kanban">
+            <span class="template-title">📋 Kanban Task Board</span>
+            <span class="template-desc">To-Do, In Progress, and Done task columns with cards.</span>
+          </div>
+          <div class="template-card" data-template="mindmap">
+            <span class="template-title">🧠 Mind Map</span>
+            <span class="template-desc">Radial brainstorming tree branching from a core topic.</span>
+          </div>
+          <div class="template-card" data-template="notes">
+            <span class="template-title">📝 Cornell Notes</span>
+            <span class="template-desc">Structured student study notes with cues and summary blocks.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Box -->
+  <div class="toast-box" id="toastBox"></div>
+
+  <!-- Scripts -->
+  <script src="/js/canvas.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

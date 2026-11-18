@@ -660,3 +660,35 @@ body {
   .top-btn span { display: none; }
   .dock-toolbar { width: 94%; overflow-x: auto; justify-content: flex-start; }
 }
+
+/* Floating Action Bar for Selected Shape */
+.selection-floating-bar {
+  position: absolute;
+  z-index: 45;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  padding: 3px 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  transform: translate(-50%, -100%);
+}
+
+.selection-floating-bar button {
+  background: transparent;
+  border: none;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+  color: #3f3f46;
+  transition: all 0.15s ease;
+}
+
+.selection-floating-bar button:hover {
+  background: #f4f4f5;
+  color: #ef4444;
+}

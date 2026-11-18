@@ -127,8 +127,19 @@
     <!-- Sticky Notes Floating Container -->
     <div id="noteContainer" style="position:absolute; inset:0; pointer-events:none;"></div>
 
+    <!-- Floating Action Bar for Selected Shape (Delete / Duplicate) -->
+    <div id="selectionToolbar" class="selection-floating-bar" style="display:none;">
+      <button id="selDeleteBtn" title="Delete shape (Delete key)">🗑️</button>
+      <button id="selDuplicateBtn" title="Duplicate shape (Ctrl+D)">⧉</button>
+    </div>
+
     <!-- Minimal Floating Bottom Dock (Tools, Shapes, Colors, Size Stepper) -->
     <nav class="dock-toolbar" id="dockToolbar">
+      <!-- Select / Move / Resize Tool -->
+      <button class="dock-btn" data-tool="select" title="Select / Move / Resize (V)">↖️</button>
+
+      <div class="dock-divider"></div>
+
       <!-- Freehand Tools -->
       <button class="dock-btn active" data-tool="pen" title="Pencil / Pen (P)">✏️</button>
       <button class="dock-btn" data-tool="marker" title="Highlighter Marker (H)">🖍️</button>

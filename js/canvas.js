@@ -1,16 +1,17 @@
-// High-Precision Minimalist Whiteboard Engine with Stepper & Deletable Sticky Notes
+// High-Precision Minimalist Whiteboard Engine with Selection, Move, and Resize
 class MinimalCanvasEngine {
   constructor(canvasId) {
     this.canvas = document.getElementById(canvasId);
     this.ctx = this.canvas.getContext('2d');
     this.container = this.canvas.parentElement;
     this.noteContainer = document.getElementById('noteContainer');
+    this.selToolbar = document.getElementById('selectionToolbar');
 
-    // Drawing state
-    this.tool = 'pen'; // pen, marker, eraser, text, note, or shape names
+    // Drawing & Tool state
+    this.tool = 'pen'; // select, pen, marker, eraser, text, note, or shape names
     this.activeShape = 'rect';
     this.color = '#18181b';
-    this.width = 4; // current stroke thickness in px
+    this.width = 4;
     this.bgStyle = 'blank'; // blank, dots, grid, dark
 
     // High DPI & Viewport Pan/Zoom
@@ -27,6 +28,12 @@ class MinimalCanvasEngine {
     this.redoStack = [];
     this.currentStroke = null;
     this.notes = [];
+
+    // Selection, Move & Resize State
+    this.selectedStroke = null;
+    this.dragMode = null; // 'move', 'resize-tl', 'resize-tr', 'resize-br', 'resize-bl'
+    this.dragStart = { x: 0, y: 0 };
+    this.initialBounds = null;
 
     // Realistic SVG Cursors
     this.PENCIL_CURSOR = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M3 25L6.5 17.5L20 4C21 3 23 3 24 4C25 5 25 7 24 8L10.5 21.5L3 25Z' fill='%23ffffff' stroke='%2318181b' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M3 25L6.5 21.5L6.5 17.5L3 25Z' fill='%2318181b'/%3E%3Cpath d='M17 7L21 11' stroke='%2318181b' stroke-width='2'/%3E%3C/svg%3E") 3 25, auto`;
@@ -46,6 +53,7 @@ class MinimalCanvasEngine {
     window.addEventListener('resize', () => this.resize());
     this.setupEvents();
     this.setupKeyboardShortcuts();
+    this.setupSelectionToolbarEvents();
     this.updateCursor();
     this.updateWidthDisplay();
     this.connectWS();
@@ -66,8 +74,15 @@ class MinimalCanvasEngine {
     this.render();
   }
 
-  updateCursor() {
-    if (this.tool === 'pen') {
+  updateCursor(custom = null) {
+    if (custom) {
+      this.canvas.style.cursor = custom;
+      return;
+    }
+
+    if (this.tool === 'select') {
+      this.canvas.style.cursor = 'default';
+    } else if (this.tool === 'pen') {
       this.canvas.style.cursor = this.PENCIL_CURSOR;
     } else if (this.tool === 'marker') {
       this.canvas.style.cursor = this.MARKER_CURSOR;
@@ -82,7 +97,7 @@ class MinimalCanvasEngine {
     }
   }
 
-  // Thickness Stepper Controls (Kam / Jayda)
+  // Thickness Stepper Controls
   increaseWidth() {
     if (this.width < 40) {
       if (this.width < 6) this.width += 1;
@@ -91,6 +106,11 @@ class MinimalCanvasEngine {
       else this.width += 4;
     }
     this.updateWidthDisplay();
+    if (this.selectedStroke) {
+      this.selectedStroke.width = this.width;
+      this.render();
+      this.broadcastStroke(this.selectedStroke);
+    }
     return this.width;
   }
 
@@ -102,6 +122,11 @@ class MinimalCanvasEngine {
       else this.width -= 4;
     }
     this.updateWidthDisplay();
+    if (this.selectedStroke) {
+      this.selectedStroke.width = this.width;
+      this.render();
+      this.broadcastStroke(this.selectedStroke);
+    }
     return this.width;
   }
 
@@ -118,8 +143,115 @@ class MinimalCanvasEngine {
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
     return {
       x: (clientX - rect.left - this.panX) / this.scale,
-      y: (clientY - rect.top - this.panY) / this.scale
+      y: (clientY - rect.top - this.panY) / this.scale,
+      screenX: clientX - rect.left,
+      screenY: clientY - rect.top
     };
+  }
+
+  // Shape Bounding Box & Handles
+  getStrokeBounds(s) {
+    if (s.startX !== undefined && s.endX !== undefined) {
+      const minX = Math.min(s.startX, s.endX);
+      const maxX = Math.max(s.startX, s.endX);
+      const minY = Math.min(s.startY, s.endY);
+      const maxY = Math.max(s.startY, s.endY);
+      return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+    }
+    if (s.points && s.points.length > 0) {
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      for (const p of s.points) {
+        if (p.x < minX) minX = p.x;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.y > maxY) maxY = p.y;
+      }
+      return { minX, minY, maxX, maxY, width: maxX - minX, height: maxY - minY };
+    }
+    return null;
+  }
+
+  normalizeShape(s) {
+    if (!s || s.startX === undefined || s.endX === undefined) return;
+    if (s.tool === 'line' || s.tool === 'arrow' || s.tool === 'doubleArrow') return;
+    const minX = Math.min(s.startX, s.endX);
+    const maxX = Math.max(s.startX, s.endX);
+    const minY = Math.min(s.startY, s.endY);
+    const maxY = Math.max(s.startY, s.endY);
+    s.startX = minX;
+    s.endX = maxX;
+    s.startY = minY;
+    s.endY = maxY;
+  }
+
+  getResizeHandles(s) {
+    if (s.tool === 'line' || s.tool === 'arrow' || s.tool === 'doubleArrow') {
+      return [
+        { id: 'resize-start', x: s.startX, y: s.startY, cursor: 'crosshair' },
+        { id: 'resize-end', x: s.endX, y: s.endY, cursor: 'crosshair' }
+      ];
+    }
+
+    const b = this.getStrokeBounds(s);
+    if (!b) return [];
+
+    return [
+      { id: 'resize-tl', x: b.minX, y: b.minY, cursor: 'nwse-resize' },
+      { id: 'resize-tr', x: b.maxX, y: b.minY, cursor: 'nesw-resize' },
+      { id: 'resize-br', x: b.maxX, y: b.maxY, cursor: 'nwse-resize' },
+      { id: 'resize-bl', x: b.minX, y: b.maxY, cursor: 'nesw-resize' }
+    ];
+  }
+
+  hitTest(pos) {
+    const distToSegment = (p, v, w) => {
+      const l2 = (w.x - v.x) ** 2 + (w.y - v.y) ** 2;
+      if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+      let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+    };
+
+    // 1. Check if clicking on resize handles of current selection
+    if (this.selectedStroke) {
+      const handles = this.getResizeHandles(this.selectedStroke);
+      const threshold = 12 / this.scale;
+      for (const h of handles) {
+        if (Math.hypot(pos.x - h.x, pos.y - h.y) <= threshold) {
+          return { target: this.selectedStroke, mode: h.id, cursor: h.cursor };
+        }
+      }
+
+      // Check if clicking on current selected stroke
+      const s = this.selectedStroke;
+      if (s.tool === 'line' || s.tool === 'arrow' || s.tool === 'doubleArrow') {
+        if (distToSegment(pos, { x: s.startX, y: s.startY }, { x: s.endX, y: s.endY }) <= 12 / this.scale) {
+          return { target: s, mode: 'move', cursor: 'move' };
+        }
+      } else {
+        const b = this.getStrokeBounds(s);
+        if (b && pos.x >= b.minX - 6 && pos.x <= b.maxX + 6 && pos.y >= b.minY - 6 && pos.y <= b.maxY + 6) {
+          return { target: s, mode: 'move', cursor: 'move' };
+        }
+      }
+    }
+
+    // 2. Check if clicking on any other stroke (topmost first)
+    for (let i = this.strokes.length - 1; i >= 0; i--) {
+      const s = this.strokes[i];
+      if (s.tool === 'line' || s.tool === 'arrow' || s.tool === 'doubleArrow') {
+        if (distToSegment(pos, { x: s.startX, y: s.startY }, { x: s.endX, y: s.endY }) <= 12 / this.scale) {
+          return { target: s, mode: 'move', cursor: 'move' };
+        }
+      } else {
+        const b = this.getStrokeBounds(s);
+        if (b && pos.x >= b.minX - 6 && pos.x <= b.maxX + 6 && pos.y >= b.minY - 6 && pos.y <= b.maxY + 6) {
+          return { target: s, mode: 'move', cursor: 'move' };
+        }
+      }
+    }
+
+    return null;
   }
 
   setupEvents() {
@@ -127,12 +259,41 @@ class MinimalCanvasEngine {
       if (e.button === 1 || (e.button === 0 && e.spaceKey)) {
         this.isPanning = true;
         this.panStart = { x: e.clientX - this.panX, y: e.clientY - this.panY };
-        this.canvas.style.cursor = 'grabbing';
+        this.updateCursor('grabbing');
         return;
       }
 
       if (e.target !== this.canvas) return;
       const pt = this.getPointerPos(e);
+
+      // SELECT / MOVE / RESIZE MODE
+      if (this.tool === 'select') {
+        const hit = this.hitTest(pt);
+        if (hit) {
+          this.selectedStroke = hit.target;
+          this.dragMode = hit.mode;
+          this.dragStart = { x: pt.x, y: pt.y };
+          this.initialBounds = {
+            startX: hit.target.startX,
+            startY: hit.target.startY,
+            endX: hit.target.endX,
+            endY: hit.target.endY
+          };
+          this.updateCursor(hit.cursor);
+          this.render();
+          this.updateSelectionToolbar();
+        } else {
+          this.selectedStroke = null;
+          this.dragMode = null;
+          this.hideSelectionToolbar();
+          this.render();
+        }
+        return;
+      }
+
+      // Deselect when starting to draw with another tool
+      this.selectedStroke = null;
+      this.hideSelectionToolbar();
 
       if (this.tool === 'text') {
         this.addTextPrompt(pt.x, pt.y);
@@ -159,6 +320,7 @@ class MinimalCanvasEngine {
       }
 
       this.currentStroke = {
+        id: 's_' + Math.random().toString(36).substr(2, 8),
         tool: this.tool,
         shape: this.isShape(this.tool) ? this.tool : null,
         color: strokeColor,
@@ -174,13 +336,62 @@ class MinimalCanvasEngine {
 
     const move = (e) => {
       const pt = this.getPointerPos(e);
-
       this.sendCursor(pt.x, pt.y);
 
       if (this.isPanning) {
         this.panX = e.clientX - this.panStart.x;
         this.panY = e.clientY - this.panStart.y;
         this.render();
+        this.updateSelectionToolbar();
+        return;
+      }
+
+      // SELECT / MOVE / RESIZE DRAG
+      if (this.tool === 'select') {
+        if (this.dragMode && this.selectedStroke) {
+          const dx = pt.x - this.dragStart.x;
+          const dy = pt.y - this.dragStart.y;
+          const s = this.selectedStroke;
+
+          if (this.dragMode === 'move') {
+            s.startX += dx;
+            s.startY += dy;
+            s.endX += dx;
+            s.endY += dy;
+            if (s.points) {
+              for (const p of s.points) {
+                p.x += dx;
+                p.y += dy;
+              }
+            }
+            this.dragStart = { x: pt.x, y: pt.y };
+          } else if (this.dragMode === 'resize-start') {
+            s.startX = pt.x;
+            s.startY = pt.y;
+          } else if (this.dragMode === 'resize-end') {
+            s.endX = pt.x;
+            s.endY = pt.y;
+          } else if (this.dragMode === 'resize-br') {
+            s.endX = pt.x;
+            s.endY = pt.y;
+          } else if (this.dragMode === 'resize-tl') {
+            s.startX = pt.x;
+            s.startY = pt.y;
+          } else if (this.dragMode === 'resize-tr') {
+            s.endX = pt.x;
+            s.startY = pt.y;
+          } else if (this.dragMode === 'resize-bl') {
+            s.startX = pt.x;
+            s.endY = pt.y;
+          }
+
+          this.render();
+          this.updateSelectionToolbar();
+        } else {
+          // Hover cursor inspection
+          const hit = this.hitTest(pt);
+          this.updateCursor(hit ? hit.cursor : 'default');
+        }
         return;
       }
 
@@ -202,12 +413,32 @@ class MinimalCanvasEngine {
         this.updateCursor();
       }
 
+      if (this.tool === 'select') {
+        if (this.dragMode && this.selectedStroke) {
+          this.normalizeShape(this.selectedStroke);
+          this.broadcastStroke(this.selectedStroke);
+          this.dragMode = null;
+          this.render();
+          this.updateSelectionToolbar();
+        }
+        return;
+      }
+
       if (!this.isDrawing || !this.currentStroke) return;
       this.isDrawing = false;
 
       this.strokes.push(this.currentStroke);
       this.redoStack = [];
       this.broadcastStroke(this.currentStroke);
+
+      // If drawn a shape, select it automatically so user can move/resize right away!
+      if (this.isShape(this.currentStroke.tool)) {
+        this.normalizeShape(this.currentStroke);
+        this.selectedStroke = this.currentStroke;
+        this.setTool('select');
+        this.updateSelectionToolbar();
+      }
+
       this.currentStroke = null;
       this.render();
     };
@@ -236,6 +467,7 @@ class MinimalCanvasEngine {
         this.panX -= e.deltaX;
         this.panY -= e.deltaY;
         this.render();
+        this.updateSelectionToolbar();
       }
     }, { passive: false });
   }
@@ -258,6 +490,8 @@ class MinimalCanvasEngine {
       } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) {
         e.preventDefault();
         this.redo();
+      } else if (e.key === 'v' || e.key === 'V') {
+        this.setTool('select');
       } else if (e.key === 'p' || e.key === 'P') {
         this.setTool('pen');
       } else if (e.key === 'h' || e.key === 'H') {
@@ -272,12 +506,104 @@ class MinimalCanvasEngine {
         this.increaseWidth();
       } else if (e.key === '-' || e.key === '_') {
         this.decreaseWidth();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (this.selectedStroke) {
+          e.preventDefault();
+          this.deleteSelected();
+        }
+      } else if (e.key === 'Escape') {
+        this.selectedStroke = null;
+        this.hideSelectionToolbar();
+        this.render();
       }
     });
   }
 
+  setupSelectionToolbarEvents() {
+    const delBtn = document.getElementById('selDeleteBtn');
+    if (delBtn) {
+      delBtn.addEventListener('click', () => {
+        this.deleteSelected();
+      });
+    }
+
+    const dupBtn = document.getElementById('selDuplicateBtn');
+    if (dupBtn) {
+      dupBtn.addEventListener('click', () => {
+        this.duplicateSelected();
+      });
+    }
+  }
+
+  updateSelectionToolbar() {
+    if (!this.selectedStroke || !this.selToolbar) {
+      this.hideSelectionToolbar();
+      return;
+    }
+
+    const b = this.getStrokeBounds(this.selectedStroke);
+    if (!b) return;
+
+    const screenX = Math.max(60, Math.min(this.widthPx - 60, ((b.minX + b.maxX) / 2) * this.scale + this.panX));
+    const screenY = b.minY * this.scale + this.panY;
+
+    this.selToolbar.style.display = 'flex';
+    this.selToolbar.style.left = `${screenX}px`;
+
+    if (screenY < 55) {
+      const bottomY = b.maxY * this.scale + this.panY;
+      this.selToolbar.style.top = `${bottomY + 12}px`;
+      this.selToolbar.style.transform = 'translate(-50%, 0)';
+    } else {
+      this.selToolbar.style.top = `${screenY - 10}px`;
+      this.selToolbar.style.transform = 'translate(-50%, -100%)';
+    }
+  }
+
+  hideSelectionToolbar() {
+    if (this.selToolbar) {
+      this.selToolbar.style.display = 'none';
+    }
+  }
+
+  deleteSelected() {
+    if (!this.selectedStroke) return;
+    this.strokes = this.strokes.filter(s => s !== this.selectedStroke);
+    this.selectedStroke = null;
+    this.hideSelectionToolbar();
+    this.render();
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({ type: 'sync_history', history: this.strokes }));
+    }
+  }
+
+  duplicateSelected() {
+    if (!this.selectedStroke) return;
+    const clone = JSON.parse(JSON.stringify(this.selectedStroke));
+    clone.id = 's_' + Math.random().toString(36).substr(2, 8);
+    clone.startX += 20;
+    clone.endX += 20;
+    clone.startY += 20;
+    clone.endY += 20;
+    if (clone.points) {
+      for (const p of clone.points) {
+        p.x += 20;
+        p.y += 20;
+      }
+    }
+    this.strokes.push(clone);
+    this.selectedStroke = clone;
+    this.render();
+    this.updateSelectionToolbar();
+    this.broadcastStroke(clone);
+  }
+
   setTool(tool) {
     this.tool = tool;
+    if (tool !== 'select') {
+      this.selectedStroke = null;
+      this.hideSelectionToolbar();
+    }
     this.updateCursor();
     document.querySelectorAll('.dock-btn[data-tool]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tool === tool);
@@ -286,6 +612,7 @@ class MinimalCanvasEngine {
     if (shapesMenuBtn) {
       shapesMenuBtn.classList.toggle('active', this.isShape(tool));
     }
+    this.render();
   }
 
   setShape(shape) {
@@ -322,6 +649,11 @@ class MinimalCanvasEngine {
     document.querySelectorAll('.color-dot').forEach(dot => {
       dot.classList.toggle('active', dot.dataset.color === hex);
     });
+    if (this.selectedStroke) {
+      this.selectedStroke.color = hex;
+      this.render();
+      this.broadcastStroke(this.selectedStroke);
+    }
   }
 
   cycleBackground() {
@@ -354,12 +686,14 @@ class MinimalCanvasEngine {
 
     document.getElementById('zoomText').innerText = `${Math.round(this.scale * 100)}%`;
     this.render();
+    this.updateSelectionToolbar();
   }
 
   setZoomScale(scale) {
     this.scale = scale;
     document.getElementById('zoomText').innerText = `${Math.round(this.scale * 100)}%`;
     this.render();
+    this.updateSelectionToolbar();
   }
 
   resetZoom() {
@@ -368,15 +702,21 @@ class MinimalCanvasEngine {
     this.panY = 0;
     document.getElementById('zoomText').innerText = '100%';
     this.render();
+    this.updateSelectionToolbar();
   }
 
   addTextPrompt(x, y) {
     const text = prompt('Type your text:');
     if (text && text.trim()) {
       const stroke = {
+        id: 's_' + Math.random().toString(36).substr(2, 8),
         tool: 'text',
         x: x,
         y: y,
+        startX: x,
+        startY: y,
+        endX: x + (text.trim().length * 10),
+        endY: y + 20,
         text: text.trim(),
         color: this.color,
         size: Math.max(16, this.width * 5)
@@ -437,7 +777,6 @@ class MinimalCanvasEngine {
       card.style.width = `${n.w * this.scale}px`;
       card.style.minHeight = `${n.h * this.scale}px`;
 
-      // Header with Color Dots + Delete Button
       const header = document.createElement('div');
       header.className = 'note-header';
 
@@ -463,7 +802,6 @@ class MinimalCanvasEngine {
         colorDots.appendChild(dot);
       });
 
-      // Delete Button
       const delBtn = document.createElement('button');
       delBtn.className = 'note-delete-btn';
       delBtn.innerHTML = '&times;';
@@ -476,7 +814,6 @@ class MinimalCanvasEngine {
       header.appendChild(colorDots);
       header.appendChild(delBtn);
 
-      // Note Editable Body
       const body = document.createElement('div');
       body.className = 'note-body';
       body.style.fontSize = `${13 * this.scale}px`;
@@ -490,7 +827,6 @@ class MinimalCanvasEngine {
       card.appendChild(header);
       card.appendChild(body);
 
-      // Dragging logic from header or card edges
       let dragging = false;
       let startX, startY;
 
@@ -529,6 +865,8 @@ class MinimalCanvasEngine {
 
   undo() {
     if (this.strokes.length > 0) {
+      this.selectedStroke = null;
+      this.hideSelectionToolbar();
       this.redoStack.push(this.strokes.pop());
       this.render();
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -551,6 +889,8 @@ class MinimalCanvasEngine {
       this.strokes = [];
       this.redoStack = [];
       this.notes = [];
+      this.selectedStroke = null;
+      this.hideSelectionToolbar();
       this.renderNotes();
       this.render();
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -601,7 +941,82 @@ class MinimalCanvasEngine {
     this.ctx.restore();
   }
 
-  // Draw Shapes & Strokes
+  // Draw Selection Bounding Box & Handles
+  drawSelectionBox() {
+    if (!this.selectedStroke) return;
+    const s = this.selectedStroke;
+
+    this.ctx.save();
+
+    // Special rendering for lines & arrows (direct endpoint handles)
+    if (s.tool === 'line' || s.tool === 'arrow' || s.tool === 'doubleArrow') {
+      const sx = s.startX * this.scale + this.panX;
+      const sy = s.startY * this.scale + this.panY;
+      const ex = s.endX * this.scale + this.panX;
+      const ey = s.endY * this.scale + this.panY;
+
+      // Dashed guide between endpoints
+      this.ctx.strokeStyle = '#2563eb';
+      this.ctx.lineWidth = 1.4;
+      this.ctx.setLineDash([4, 4]);
+      this.ctx.beginPath();
+      this.ctx.moveTo(sx, sy);
+      this.ctx.lineTo(ex, ey);
+      this.ctx.stroke();
+      this.ctx.setLineDash([]);
+
+      // Endpoint handles
+      for (const pt of [{ x: sx, y: sy }, { x: ex, y: ey }]) {
+        this.ctx.beginPath();
+        this.ctx.arc(pt.x, pt.y, 5.5, 0, Math.PI * 2);
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fill();
+        this.ctx.strokeStyle = '#2563eb';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+      }
+
+      this.ctx.restore();
+      return;
+    }
+
+    const b = this.getStrokeBounds(s);
+    if (!b) {
+      this.ctx.restore();
+      return;
+    }
+
+    const sx = b.minX * this.scale + this.panX;
+    const sy = b.minY * this.scale + this.panY;
+    const sw = b.width * this.scale;
+    const sh = b.height * this.scale;
+
+    // Dashed bounding rectangle
+    this.ctx.strokeStyle = '#2563eb';
+    this.ctx.lineWidth = 1.6;
+    this.ctx.setLineDash([5, 4]);
+    this.ctx.strokeRect(sx - 4, sy - 4, sw + 8, sh + 8);
+    this.ctx.setLineDash([]);
+
+    // 4 Corner Resize Handles
+    const handles = this.getResizeHandles(s);
+    for (const h of handles) {
+      const hx = h.x * this.scale + this.panX;
+      const hy = h.y * this.scale + this.panY;
+
+      this.ctx.beginPath();
+      this.ctx.arc(hx, hy, 5.5, 0, Math.PI * 2);
+      this.ctx.fillStyle = '#ffffff';
+      this.ctx.fill();
+      this.ctx.strokeStyle = '#2563eb';
+      this.ctx.lineWidth = 2;
+      this.ctx.stroke();
+    }
+
+    this.ctx.restore();
+  }
+
+  // Render Individual Stroke / Shape
   renderStroke(s) {
     this.ctx.save();
     this.ctx.strokeStyle = s.color || '#18181b';
@@ -815,6 +1230,11 @@ class MinimalCanvasEngine {
       this.renderStroke(this.currentStroke);
     }
 
+    // Render selection box on top if a shape is selected
+    if (this.selectedStroke) {
+      this.drawSelectionBox();
+    }
+
     this.renderNotes();
   }
 
@@ -822,56 +1242,58 @@ class MinimalCanvasEngine {
   loadTemplate(name) {
     this.strokes = [];
     this.notes = [];
+    this.selectedStroke = null;
+    this.hideSelectionToolbar();
 
     if (name === 'math') {
       this.bgStyle = 'grid';
       document.getElementById('bgLabel').innerText = 'Math Grid';
       const cx = this.widthPx / 2;
       const cy = this.heightPx / 2;
-      this.strokes.push({ tool: 'arrow', startX: 100, startY: cy, endX: this.widthPx - 100, endY: cy, color: '#18181b', width: 2 });
-      this.strokes.push({ tool: 'arrow', startX: cx, startY: this.heightPx - 80, endX: cx, endY: 80, color: '#18181b', width: 2 });
-      this.strokes.push({ tool: 'text', x: this.widthPx - 80, y: cy - 10, text: '+X', color: '#18181b', size: 16 });
-      this.strokes.push({ tool: 'text', x: cx + 12, y: 70, text: '+Y', color: '#18181b', size: 16 });
+      this.strokes.push({ id: 's_m1', tool: 'arrow', startX: 100, startY: cy, endX: this.widthPx - 100, endY: cy, color: '#18181b', width: 2 });
+      this.strokes.push({ id: 's_m2', tool: 'arrow', startX: cx, startY: this.heightPx - 80, endX: cx, endY: 80, color: '#18181b', width: 2 });
+      this.strokes.push({ id: 's_m3', tool: 'text', x: this.widthPx - 80, y: cy - 10, text: '+X', color: '#18181b', size: 16 });
+      this.strokes.push({ id: 's_m4', tool: 'text', x: cx + 12, y: 70, text: '+Y', color: '#18181b', size: 16 });
     } else if (name === 'retro') {
-      this.strokes.push({ tool: 'rect', startX: 80, startY: 80, endX: 380, endY: 580, color: '#3b82f6', width: 2 });
-      this.strokes.push({ tool: 'text', x: 100, y: 120, text: '🎉 What Went Well', color: '#3b82f6', size: 18 });
+      this.strokes.push({ id: 's_r1', tool: 'rect', startX: 80, startY: 80, endX: 380, endY: 580, color: '#3b82f6', width: 2 });
+      this.strokes.push({ id: 's_r2', tool: 'text', x: 100, y: 120, text: '🎉 What Went Well', color: '#3b82f6', size: 18 });
       this.createSticky(100, 150, 'Shipped feature v1!', 'note-card-green');
 
-      this.strokes.push({ tool: 'rect', startX: 420, startY: 80, endX: 720, endY: 580, color: '#ef4444', width: 2 });
-      this.strokes.push({ tool: 'text', x: 440, y: 120, text: '⚠️ Needs Work', color: '#ef4444', size: 18 });
+      this.strokes.push({ id: 's_r3', tool: 'rect', startX: 420, startY: 80, endX: 720, endY: 580, color: '#ef4444', width: 2 });
+      this.strokes.push({ id: 's_r4', tool: 'text', x: 440, y: 120, text: '⚠️ Needs Work', color: '#ef4444', size: 18 });
       this.createSticky(440, 150, 'Review turnaround slow', 'note-card-pink');
 
-      this.strokes.push({ tool: 'rect', startX: 760, startY: 80, endX: 1060, endY: 580, color: '#10b981', width: 2 });
-      this.strokes.push({ tool: 'text', x: 780, y: 120, text: '🚀 Action Items', color: '#10b981', size: 18 });
+      this.strokes.push({ id: 's_r5', tool: 'rect', startX: 760, startY: 80, endX: 1060, endY: 580, color: '#10b981', width: 2 });
+      this.strokes.push({ id: 's_r6', tool: 'text', x: 780, y: 120, text: '🚀 Action Items', color: '#10b981', size: 18 });
       this.createSticky(780, 150, 'Automate CI checks', 'note-card-blue');
     } else if (name === 'kanban') {
-      this.strokes.push({ tool: 'rect', startX: 80, startY: 80, endX: 380, endY: 580, color: '#71717a', width: 2 });
-      this.strokes.push({ tool: 'text', x: 100, y: 120, text: '📋 To-Do', color: '#18181b', size: 18 });
+      this.strokes.push({ id: 's_k1', tool: 'rect', startX: 80, startY: 80, endX: 380, endY: 580, color: '#71717a', width: 2 });
+      this.strokes.push({ id: 's_k2', tool: 'text', x: 100, y: 120, text: '📋 To-Do', color: '#18181b', size: 18 });
       this.createSticky(100, 150, 'Design clean UI', 'note-card-yellow');
 
-      this.strokes.push({ tool: 'rect', startX: 420, startY: 80, endX: 720, endY: 580, color: '#f59e0b', width: 2 });
-      this.strokes.push({ tool: 'text', x: 440, y: 120, text: '⏳ In Progress', color: '#f59e0b', size: 18 });
+      this.strokes.push({ id: 's_k3', tool: 'rect', startX: 420, startY: 80, endX: 720, endY: 580, color: '#f59e0b', width: 2 });
+      this.strokes.push({ id: 's_k4', tool: 'text', x: 440, y: 120, text: '⏳ In Progress', color: '#f59e0b', size: 18 });
       this.createSticky(440, 150, 'Test canvas sync', 'note-card-blue');
 
-      this.strokes.push({ tool: 'rect', startX: 760, startY: 80, endX: 1060, endY: 580, color: '#10b981', width: 2 });
-      this.strokes.push({ tool: 'text', x: 780, y: 120, text: '✅ Completed', color: '#10b981', size: 18 });
+      this.strokes.push({ id: 's_k5', tool: 'rect', startX: 760, startY: 80, endX: 1060, endY: 580, color: '#10b981', width: 2 });
+      this.strokes.push({ id: 's_k6', tool: 'text', x: 780, y: 120, text: '✅ Completed', color: '#10b981', size: 18 });
       this.createSticky(780, 150, 'Launch localhost server', 'note-card-green');
     } else if (name === 'mindmap') {
       const cx = this.widthPx / 2;
       const cy = this.heightPx / 2;
-      this.strokes.push({ tool: 'circle', startX: cx - 70, startY: cy - 70, endX: cx + 70, endY: cy + 70, color: '#2563eb', width: 3 });
-      this.strokes.push({ tool: 'text', x: cx - 45, y: cy + 5, text: 'Main Idea', color: '#2563eb', size: 18 });
-      this.strokes.push({ tool: 'arrow', startX: cx - 75, startY: cy - 40, endX: cx - 220, endY: cy - 140, color: '#71717a', width: 2 });
-      this.strokes.push({ tool: 'arrow', startX: cx + 75, startY: cy - 40, endX: cx + 220, endY: cy - 140, color: '#71717a', width: 2 });
+      this.strokes.push({ id: 's_mm1', tool: 'circle', startX: cx - 70, startY: cy - 70, endX: cx + 70, endY: cy + 70, color: '#2563eb', width: 3 });
+      this.strokes.push({ id: 's_mm2', tool: 'text', x: cx - 45, y: cy + 5, text: 'Main Idea', color: '#2563eb', size: 18 });
+      this.strokes.push({ id: 's_mm3', tool: 'arrow', startX: cx - 75, startY: cy - 40, endX: cx - 220, endY: cy - 140, color: '#71717a', width: 2 });
+      this.strokes.push({ id: 's_mm4', tool: 'arrow', startX: cx + 75, startY: cy - 40, endX: cx + 220, endY: cy - 140, color: '#71717a', width: 2 });
       this.createSticky(cx - 320, cy - 190, 'Topic A: Research', 'note-card-yellow');
       this.createSticky(cx + 220, cy - 190, 'Topic B: Execution', 'note-card-green');
     } else if (name === 'notes') {
-      this.strokes.push({ tool: 'rect', startX: 80, startY: 60, endX: 320, endY: 520, color: '#71717a', width: 2 });
-      this.strokes.push({ tool: 'text', x: 100, y: 100, text: 'Questions / Cues', color: '#18181b', size: 16 });
-      this.strokes.push({ tool: 'rect', startX: 340, startY: 60, endX: 980, endY: 520, color: '#71717a', width: 2 });
-      this.strokes.push({ tool: 'text', x: 360, y: 100, text: 'Lecture & Class Notes', color: '#18181b', size: 16 });
-      this.strokes.push({ tool: 'rect', startX: 80, startY: 540, endX: 980, endY: 660, color: '#71717a', width: 2 });
-      this.strokes.push({ tool: 'text', x: 100, y: 575, text: 'Summary in 1-2 Sentences', color: '#18181b', size: 16 });
+      this.strokes.push({ id: 's_cn1', tool: 'rect', startX: 80, startY: 60, endX: 320, endY: 520, color: '#71717a', width: 2 });
+      this.strokes.push({ id: 's_cn2', tool: 'text', x: 100, y: 100, text: 'Questions / Cues', color: '#18181b', size: 16 });
+      this.strokes.push({ id: 's_cn3', tool: 'rect', startX: 340, startY: 60, endX: 980, endY: 520, color: '#71717a', width: 2 });
+      this.strokes.push({ id: 's_cn4', tool: 'text', x: 360, y: 100, text: 'Lecture & Class Notes', color: '#18181b', size: 16 });
+      this.strokes.push({ id: 's_cn5', tool: 'rect', startX: 80, startY: 540, endX: 980, endY: 660, color: '#71717a', width: 2 });
+      this.strokes.push({ id: 's_cn6', tool: 'text', x: 100, y: 575, text: 'Summary in 1-2 Sentences', color: '#18181b', size: 16 });
     }
 
     this.render();
@@ -896,13 +1318,21 @@ class MinimalCanvasEngine {
             this.render();
           }
         } else if (msg.type === 'draw_stroke') {
-          this.strokes.push(msg.stroke);
+          // If stroke exists, update it (for move/resize), else append
+          const idx = this.strokes.findIndex(s => s.id === msg.stroke.id);
+          if (idx !== -1) {
+            this.strokes[idx] = msg.stroke;
+          } else {
+            this.strokes.push(msg.stroke);
+          }
           this.render();
         } else if (msg.type === 'cursor_move') {
           this.renderPeerCursor(msg);
         } else if (msg.type === 'clear_canvas') {
           this.strokes = [];
           this.notes = [];
+          this.selectedStroke = null;
+          this.hideSelectionToolbar();
           this.renderNotes();
           this.render();
         } else if (msg.type === 'sync_history') {

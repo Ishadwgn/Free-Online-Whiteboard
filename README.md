@@ -77,20 +77,19 @@ http://localhost:3000
 
 ---
 
-## 🌐 Deploy to Production
+## 🌐 Live Production Deployment
 
-### Option 1: GitHub Pages (Automatic Static Deployment)
-This repository includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that automatically publishes the `public/` folder to GitHub Pages when pushed to `main`.
+### Main Production URL:
+👉 **[https://free-online-whiteboard.netlify.app/](https://free-online-whiteboard.netlify.app/)**
 
-Enable GitHub Pages in your repository settings:
-1. Go to **Settings** > **Pages**.
-2. Under **Build and deployment** > **Source**, select **GitHub Actions**.
-3. Your whiteboard will be live at: `https://ishadwgn.github.io/Free-Online-Whiteboard/`
+### Netlify Deployment
+This site is pre-configured for zero-config Netlify hosting with `netlify.toml` and `_redirects`.
+Pushing to `main` automatically triggers deployment to:
+**https://free-online-whiteboard.netlify.app/**
 
-### Option 2: Render / Railway / Vercel
-- **Build Command:** `npm install`
-- **Start Command:** `node server.js`
-- **Node Version:** `>= 18`
+### Backup: GitHub Pages / Vercel / Render
+- **GitHub Pages:** Pre-configured via `.github/workflows/deploy.yml`
+- **Render / Railway / Vercel:** Node 18+ with `npm start`
 
 ---
 

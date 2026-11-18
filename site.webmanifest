@@ -2,8 +2,8 @@
   "name": "Free Online Whiteboard - No Login Collaborative Drawing",
   "short_name": "Whiteboard",
   "description": "100% Free online collaborative whiteboard with zero sign-up. Draw, solve math, brainstorm, and collaborate in real time.",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "https://free-online-whiteboard.netlify.app/",
+  "scope": "https://free-online-whiteboard.netlify.app/",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#fafafa",
@@ -11,21 +11,38 @@
   "categories": ["education", "productivity", "utilities"],
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "https://free-online-whiteboard.netlify.app/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "https://free-online-whiteboard.netlify.app/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/favicon.svg",
+      "src": "https://free-online-whiteboard.netlify.app/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Blank Canvas",
+      "url": "https://free-online-whiteboard.netlify.app/",
+      "description": "Open a fresh blank whiteboard"
+    },
+    {
+      "name": "Math Coordinate Grid",
+      "url": "https://free-online-whiteboard.netlify.app/?template=math",
+      "description": "Open Cartesian coordinate plane"
+    },
+    {
+      "name": "Sprint Retrospective",
+      "url": "https://free-online-whiteboard.netlify.app/?template=retro",
+      "description": "Open agile retrospective board"
     }
   ]
 }
